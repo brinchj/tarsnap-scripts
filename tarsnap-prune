@@ -8,6 +8,7 @@ CMD_TARSNAP = 'tarsnap --keyfile %s --cachedir %s' % (KEYFILE, CACHEFILE)
 CMD_TARSNAP_LIST = '%s %s' % (CMD_TARSNAP, '--list-archives')
 CMD_TARSNAP_DEL  = '%s %s' % (CMD_TARSNAP, '-d -f "%s"')
 
+
 import math
 def get_min_interval(arc):
     """ Return the minimal interval between two archives in hours """
@@ -46,7 +47,7 @@ class TarsnapArchive():
         return self.get_age() / (24*3600)
 
     def delete(self):
-        print 'wants to delete: %s' % self
+        print 'Deleting: %s' % self
         subprocess.Popen(CMD_TARSNAP_DEL % self.name, shell=True).wait()
 
     """ Special methods """
@@ -106,4 +107,5 @@ def prune():
             else:
                 ars = ars[1:]
 
-print prune()
+if __name__ == '__main__':
+    prune()
