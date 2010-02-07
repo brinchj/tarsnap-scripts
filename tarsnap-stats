@@ -1,0 +1,2 @@
+#!/bin/sh
+tarsnap-run --print-stats

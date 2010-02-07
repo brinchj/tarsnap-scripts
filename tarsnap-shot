@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+NAME="laptux-ng"
+TIME="`date +%Y%m%d-%H%M%S`"
+
+INCLUDE="/etc /root /home/jos"
+EXCLUDE="/home/jos/downloads --exclude /home/jos/Downloads --exclude /home/jos/.mozilla \
+--exclude /home/jos/.opera --exclude /home/jos/.tarsnap"
+
+echo "creating new snapshot: $NAME-$TIME"
+
+
+tarsnap-run --print-stats \
+  --checkpoint-bytes 4194304 \
+  -c -f "$NAME-$TIME" $* \
+  --exclude "$EXCLUDE" \
+  "$INCLUDE"
