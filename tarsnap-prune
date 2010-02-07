@@ -1,0 +1,109 @@
+#!/usr/bin/python
+
+
+""" CONFIG """
+KEYFILE   = '/home/jos/.tarsnap/laptux-ng.key'
+CACHEFILE = '/home/jos/.tarsnap/cache'
+CMD_TARSNAP = 'tarsnap --keyfile %s --cachedir %s' % (KEYFILE, CACHEFILE)
+CMD_TARSNAP_LIST = '%s %s' % (CMD_TARSNAP, '--list-archives')
+CMD_TARSNAP_DEL  = '%s %s' % (CMD_TARSNAP, '-d -f "%s"')
+
+import math
+def get_min_interval(arc):
+    """ Return the minimal interval between two archives in hours """
+    age = arc.get_age_in_days()
+    if age <= 7: return 12
+    return 24 * 2**(int(math.log(age,2)) / 2)
+
+
+
+""" Imports """
+import subprocess, re
+from datetime import datetime
+
+
+""" Classes """
+class TarsnapArchive():
+    """ Tarsnap Archive with name and creation date """
+    def __init__(self, name):
+        self.set_name(name)
+        self.set_date_from_name()
+
+    """ Methods """
+    def set_date_from_name(self):
+        lst = re.findall(r'(\d{8})-(\d{6})$', self.name)
+        if(len(lst) == 0):
+            raise "Could not read date format: '%s'" % self.name
+        d,t = lst[0]
+        self.date = datetime(year=int(d[:4]), month=int(d[4:6]), day=int(d[-2:]),
+                             hour=int(t[:2]), minute=int(t[2:4]), second=int(t[-2:]))
+
+    def get_age(self):
+        td = datetime.now() - self.get_date()
+        return td.days * 24 * 3600 + td.seconds + td.microseconds / 1000000.0
+
+    def get_age_in_days(self):
+        return self.get_age() / (24*3600)
+
+    def delete(self):
+        print 'wants to delete: %s' % self
+        subprocess.Popen(CMD_TARSNAP_DEL % self.name, shell=True).wait()
+
+    """ Special methods """
+    def __repr__(self):
+        return "<TarsnapArchive: %s @ %s>" % (self.name, self.date)
+    def __str__(self):
+        return repr(self)
+    def __sub__(self, other):
+        return self.get_age_in_days() - other.get_age_in_days()
+    def __cmp__(self, other):
+        return cmp(self.get_age(), other.get_age())
+
+    """ Get / set """
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_date(self):
+        return self.date
+
+    """ Properties """
+    name = property(get_name, set_name)
+    date = property(get_date)
+
+
+
+""" Methods """
+def get_tarsnap_list():
+    """ Return a list of current tarsnap archives """
+    p = subprocess.Popen(CMD_TARSNAP_LIST, stdout=subprocess.PIPE, shell=True)
+    return p.stdout.read().strip().split('\n')
+
+
+def get_tarsnap_archives():
+    """ Return a list of TarsnapAchive() """
+    arcs = map(TarsnapArchive, get_tarsnap_list())
+    arcs.sort()
+    return arcs
+
+
+def prune():
+    change = True
+    while change:
+        change = False
+        ars = get_tarsnap_archives()
+        while len(ars) >= 2:
+            # get two first elems
+            a,b = ars[:2]
+            # check interval between a and b
+            if b - a < get_min_interval(a)/24.0:
+                # delete newest
+                a.delete()
+                ars = ars[2:]
+                change = True
+            else:
+                ars = ars[1:]
+
+print prune()
