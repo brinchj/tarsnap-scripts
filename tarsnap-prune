@@ -94,7 +94,7 @@ def prune():
     change = True
     while change:
         change = False
-        ars = get_tarsnap_archives()
+        ars = get_tarsnap_archives()[7:]
         while len(ars) >= 2:
             # get two first elems
             a,b = ars[:2]
