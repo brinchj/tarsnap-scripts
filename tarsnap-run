@@ -3,6 +3,4 @@
 KEYFILE="/home/jos/.tarsnap/laptux-ng.key"
 CACHEDIR="/home/jos/.tarsnap/cache"
 
-if [ -f ${KEYFILE} ]; then
-	nice tarsnap --cachedir ${CACHEDIR} --keyfile ${KEYFILE} --humanize-numbers $*
-fi
+nice tarsnap --cachedir ${CACHEDIR} --keyfile ${KEYFILE} --humanize-numbers $*
